@@ -45,6 +45,55 @@ var app = {
         listeningElement.setAttribute('style', 'display:none;');
         receivedElement.setAttribute('style', 'display:block;');
 
-        console.log('Received Event: ' + id);
+        console.log('Received Event: ' + id); 
     }
 };
+
+
+function test1(){
+	var e = $(".output");
+
+    e.text("loading...");
+    $.ajax({
+       url: "http://weather.yahooapis.com/forecastrss?w=2502265&u=c",
+       //xhrFields: {
+       //  withCredentials: true
+       //}
+    })
+    .done( function(data){
+        e.text(formatXml(data));
+    });
+}
+
+function formatXml(xmlDoc) {
+    var xml = new XMLSerializer().serializeToString(xmlDoc),
+        formatted = '',
+        reg = /(>)(<)(\/*)/g;
+    
+    xml = xml.replace(reg, '$1\r\n$2$3');
+    var pad = 0;
+    jQuery.each(xml.split('\r\n'), function(index, node) {
+        var indent = 0;
+        if (node.match( /.+<\/\w[^>]*>$/ )) {
+            indent = 0;
+        } else if (node.match( /^<\/\w/ )) {
+            if (pad != 0) {
+                pad -= 1;
+            }
+        } else if (node.match( /^<\w[^>]*[^\/]>.*$/ )) {
+            indent = 1;
+        } else {
+            indent = 0;
+        }
+
+        var padding = '';
+        for (var i = 0; i < pad; i++) {
+            padding += '  ';
+        }
+
+        formatted += padding + node + '\r\n';
+        pad += indent;
+    });
+
+    return formatted;
+}
